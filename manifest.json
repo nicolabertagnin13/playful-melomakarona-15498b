@@ -1,0 +1,20 @@
+{
+  "name": "Modulo Integrità Locale",
+  "short_name": "Modulo CED",
+  "description": "Modulo per la dichiarazione di integrità del locale",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1e293b",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "icon-512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
