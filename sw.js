@@ -7,6 +7,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Anche solo un "return" è sufficiente per Chrome Android
+  // Chrome Android richiede che questo gestore esista e sia "attivo".
+  // Anche una semplice return è sufficiente per superare il controllo di installabilità.
   return;
 });
