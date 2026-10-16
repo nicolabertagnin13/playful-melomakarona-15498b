@@ -1131,6 +1131,19 @@ setTimeout(function() {
   }
 }, 100);
 
+// Registra il Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('✅ Service Worker registrato:', registration.scope);
+      })
+      .catch(err => {
+        console.log('❌ Registrazione Service Worker fallita:', err);
+      });
+  });
+}
+
 avvia();
 </script>
 
