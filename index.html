@@ -740,10 +740,10 @@ function applicaTema(tema) {
   
   if (tema === 'light') {
     body.classList.add('light-theme');
-    if(metaTheme) metaTheme.setAttribute('content', '#991b1b'); // Colore rosso per la barra di stato
+    if(metaTheme) metaTheme.setAttribute('content', '#991b1b');
   } else {
     body.classList.remove('light-theme');
-    if(metaTheme) metaTheme.setAttribute('content', '#1e293b'); // Colore scuro originale
+    if(metaTheme) metaTheme.setAttribute('content', '#1e293b');
   }
 }
 
@@ -754,9 +754,7 @@ function toggleTema() {
   localStorage.setItem(THEME_KEY, nuovoTema);
 }
 
-// Collega il click al logo
 document.addEventListener('DOMContentLoaded', () => {
-  // Carica il tema salvato (se non c'è, usa 'dark')
   const temaSalvato = localStorage.getItem(THEME_KEY) || 'dark';
   applicaTema(temaSalvato);
 
@@ -772,21 +770,16 @@ document.addEventListener('DOMContentLoaded', () => {
 let orientamentoCorrente = null;
 
 function rilevaOrientamento() {
-  // Metodo moderno, molto affidabile
   const isPortrait = window.matchMedia('(orientation: portrait)').matches;
   const isSmallScreen = Math.min(window.innerWidth, window.innerHeight) < 500;
   const nuovoOrientamento = isPortrait ? 'portrait' : 'landscape';
 
-  // Se è cambiato qualcosa, gestiamo il cambio
   if (nuovoOrientamento !== orientamentoCorrente) {
     orientamentoCorrente = nuovoOrientamento;
     console.log('📱 Orientamento:', orientamentoCorrente);
 
-    // Mostra/nascondi suggerimento rotazione
     const hint = document.getElementById('rotateHint');
     if (hint) {
-      // Mostra il suggerimento SOLO in verticale su schermi piccoli,
-      // e solo per i primi 5 secondi
       if (isPortrait && isSmallScreen) {
         hint.classList.add('visible');
         setTimeout(() => hint.classList.remove('visible'), 5000);
@@ -795,20 +788,50 @@ function rilevaOrientamento() {
       }
     }
 
-    /* =========================================================
-   AVVIO: decodifica Base64 e carica PDF
-   ========================================================= */
-async function avvia() {
-  
-    // Ricalcola il PDF per adattarlo alla nuova larghezza
     if (pdfDoc) {
-      // Piccolo ritardo per aspettare che il browser aggiorni le dimensioni
       setTimeout(() => {
-        // Salva i dati prima di ridisegnare (per non perdere nulla)
         if (typeof salvaDati === 'function') salvaDati();
         renderPage();
       }, 150);
     }
+  }
+}
+
+if (window.matchMedia) {
+  window.matchMedia('(orientation: portrait)').addEventListener('change', rilevaOrientamento);
+  window.matchMedia('(orientation: landscape)').addEventListener('change', rilevaOrientamento);
+}
+
+window.addEventListener('orientationchange', () => {
+  setTimeout(rilevaOrientamento, 200);
+});
+
+setTimeout(rilevaOrientamento, 500);
+
+/* =========================================================
+   AVVIO: decodifica Base64 e carica PDF
+   ========================================================= */
+async function avvia() {
+  try {
+    const bin = atob(PDF_BASE64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+    pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+
+    elements = CAMPI_INIZIALI.map(c => ({ ...c }));
+    caricaDati(); 
+
+    await renderPage();
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('appHeader').classList.remove('hidden');
+    document.getElementById('toolbar').classList.remove('hidden');
+    document.getElementById('main').classList.remove('hidden');
+  } catch (err) {
+    document.getElementById('loading').innerHTML =
+      '<p style="color:red">Errore: ' + err.message + '</p>';
+    console.error(err);
   }
 }
 
