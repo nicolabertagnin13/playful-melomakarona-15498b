@@ -37,6 +37,144 @@
     --radius: 12px;
   }
 
+    /* ===== TEMA CHIARO (STILE EXOR) ===== */
+  body.light-theme {
+    --bg-base: #e5e7eb;              /* Sfondo grigio chiaro generale */
+    --bg-gradient: none;             
+    --card-bg: #f3f4f6;
+    --card-bg-2: #e5e7eb;
+    --border-soft: #d1d5db;
+    --accent: #991b1b;               /* Rosso scuro aziendale */
+    --accent-bright: #7f1d1d;        
+    --accent-soft: rgba(153, 27, 27, 0.1);
+    --text-dark: #111827;            /* Testo quasi nero */
+    --text-light: #4b5563;           /* Testo grigio scuro */
+    --success: #166534;              
+    --danger: #b91c1c;
+    --glow: none;                    
+  }
+
+  /* Adattamenti specifici per il tema chiaro */
+  body.light-theme header {
+    background: #991b1b;             /* Header rosso */
+    border-bottom: 2px solid #7f1d1d;
+  }
+  body.light-theme header h1 {
+    color: #ffffff;
+  }
+  body.light-theme #toolbar {
+    background: #f3f4f6;
+    color: #374151;
+    border-bottom: 1px solid #d1d5db;
+  }
+  
+  /* I pulsanti nell'header sul rosso */
+  body.light-theme header button {
+    color: #ffffff;
+    border-color: #ffffff;
+  }
+  body.light-theme header button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: none;
+  }
+  body.light-theme header button.success {
+    background: #ffffff;
+    color: #991b1b;
+    border-color: #ffffff;
+  }
+  body.light-theme header button.success:hover {
+    background: #f3f4f6;
+  }
+  body.light-theme header button.danger {
+    color: #fca5a5;
+    border-color: #fca5a5;
+  }
+  body.light-theme header button.danger:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* L'area del PDF nel tema chiaro */
+  body.light-theme #main {
+    background-color: #e5e7eb;
+  }
+  body.light-theme #pdfContainer.dark-pdf {
+    background: #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  body.light-theme #pdfContainer.dark-pdf .field {
+    background: #ffffff;
+    border-color: #9ca3af;
+    color: #111827;
+  }
+  body.light-theme #pdfContainer.dark-pdf .field:focus {
+    border-color: #991b1b;
+    box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.2);
+  }
+  body.light-theme #pdfContainer.dark-pdf .field::placeholder {
+    color: #9ca3af;
+  }
+
+  /* L'etichetta della firma */
+  body.light-theme .sigLabel {
+    background: #991b1b;
+    color: #ffffff;
+    border: none;
+  }
+  
+  /* La modale nel tema chiaro */
+  body.light-theme #inputModal {
+    background: rgba(0, 0, 0, 0.5); 
+  }
+  body.light-theme #inputModal .modal-content {
+    background: #ffffff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    padding: 0; 
+  }
+  body.light-theme #inputModal h3 {
+    background: #991b1b;
+    color: #ffffff;
+    padding: 16px 20px;
+    border-radius: 8px 8px 0 0;
+    font-size: 16px;
+    text-transform: none; 
+    letter-spacing: normal;
+    margin-bottom: 16px;
+  }
+  body.light-theme #inputModal textarea {
+    background: #ffffff;
+    border: 2px solid #991b1b;
+    border-radius: 6px;
+    color: #111827;
+    width: calc(100% - 40px); 
+    margin: 0 20px;
+    height: 120px;
+  }
+  body.light-theme #inputModal textarea:focus {
+    box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.2);
+  }
+  body.light-theme #inputModal .modal-buttons {
+    padding: 0 20px 20px 20px; 
+    margin-top: 16px;
+  }
+  body.light-theme #inputModal button.secondary {
+    color: #4b5563;
+    border-color: #d1d5db;
+  }
+  body.light-theme #inputModal button.secondary:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+  body.light-theme #inputModal button:not(.secondary) {
+    background: #991b1b;
+    color: #ffffff;
+    border-color: #991b1b;
+  }
+  body.light-theme #inputModal button:not(.secondary):hover {
+    background: #7f1d1d;
+  }
+
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   body {
@@ -465,7 +603,7 @@
 
 <header class="hidden" id="appHeader">
   <h1>
-  <img src="logo-s.png" alt="" class="header-logo">
+  <img src="logo-s.png" alt="Cambia Tema" class="header-logo" id="themeToggle" style="cursor: pointer;" title="Cambia tema chiaro/scuro">
   Dichiarazione Integrità Locale
 </h1>
   <button class="danger" id="clearBtn">🗑️ Svuota campi</button>
@@ -585,6 +723,43 @@ const container = document.getElementById('pdfContainer');
 let pdfDoc = null;
 let scale = 1;
 let elements = [];
+
+/* =========================================================
+   GESTIONE TEMA CHIARO / SCURO
+   ========================================================= */
+const THEME_KEY = 'moduloCED_tema';
+
+function applicaTema(tema) {
+  const body = document.body;
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  
+  if (tema === 'light') {
+    body.classList.add('light-theme');
+    if(metaTheme) metaTheme.setAttribute('content', '#991b1b'); // Colore rosso per la barra di stato
+  } else {
+    body.classList.remove('light-theme');
+    if(metaTheme) metaTheme.setAttribute('content', '#1e293b'); // Colore scuro originale
+  }
+}
+
+function toggleTema() {
+  const isLight = document.body.classList.contains('light-theme');
+  const nuovoTema = isLight ? 'dark' : 'light';
+  applicaTema(nuovoTema);
+  localStorage.setItem(THEME_KEY, nuovoTema);
+}
+
+// Collega il click al logo
+document.addEventListener('DOMContentLoaded', () => {
+  // Carica il tema salvato (se non c'è, usa 'dark')
+  const temaSalvato = localStorage.getItem(THEME_KEY) || 'dark';
+  applicaTema(temaSalvato);
+
+  const logo = document.getElementById('themeToggle');
+  if (logo) {
+    logo.addEventListener('click', toggleTema);
+  }
+});
 
 /* =========================================================
    AVVIO: decodifica Base64 e carica PDF
