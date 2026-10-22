@@ -193,6 +193,11 @@
     height: 100dvh; overflow: hidden;
   }
 
+    /* La firma deve rimanere nera quando il tema è chiaro */
+  body.light-theme .sigBox canvas {
+    filter: none !important;
+  }
+  
   /* ===== HEADER ===== */
   header {
     background: #0f1319;
