@@ -835,46 +835,6 @@ async function avvia() {
   }
 }
 
-// Ascolta cambi di orientamento con il metodo moderno
-if (window.matchMedia) {
-  window.matchMedia('(orientation: portrait)').addEventListener('change', rilevaOrientamento);
-  window.matchMedia('(orientation: landscape)').addEventListener('change', rilevaOrientamento);
-}
-
-// Fallback per browser vecchi
-window.addEventListener('orientationchange', () => {
-  setTimeout(rilevaOrientamento, 200);
-});
-
-// Rileva all'avvio
-setTimeout(rilevaOrientamento, 500);
-
-  try {
-    const bin = atob(PDF_BASE64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
-    pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
-
-     // Posizioni fisse: ignora localStorage
-    elements = CAMPI_INIZIALI.map(c => ({ ...c }));
-
-    // ✅ Carica i dati salvati (testo + firma)
-caricaDati(); 
-
-    await renderPage();
-
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('appHeader').classList.remove('hidden');
-    document.getElementById('toolbar').classList.remove('hidden');
-    document.getElementById('main').classList.remove('hidden');
-  } catch (err) {
-    document.getElementById('loading').innerHTML =
-      '<p style="color:red">Errore: ' + err.message + '</p>';
-    console.error(err);
-  }
-
-
 /* =========================================================
    RENDER
    ========================================================= */
