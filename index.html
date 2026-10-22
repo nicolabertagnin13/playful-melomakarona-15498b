@@ -743,13 +743,18 @@ const THEME_KEY = 'moduloCED_tema';
 function applicaTema(tema) {
   const body = document.body;
   const metaTheme = document.querySelector('meta[name="theme-color"]');
+  const pdfContainer = document.getElementById('pdfContainer');
   
   if (tema === 'light') {
     body.classList.add('light-theme');
     if(metaTheme) metaTheme.setAttribute('content', '#991b1b');
+    // ✅ Togliamo la classe dark-pdf nel tema chiaro!
+    if (pdfContainer) pdfContainer.classList.remove('dark-pdf');
   } else {
     body.classList.remove('light-theme');
     if(metaTheme) metaTheme.setAttribute('content', '#1e293b');
+    // ✅ Aggiungiamo la classe dark-pdf nel tema scuro
+    if (pdfContainer) pdfContainer.classList.add('dark-pdf');
   }
 }
 
@@ -960,7 +965,7 @@ currentEditingElement = el;
     // ✅ Il tratto è SEMPRE nero nel canvas. L'aspetto bianco nel tema scuro
     //    si ottiene invertendo i pixel solo al momento del render.
     //    Il colore non dipende più dal DOM: dipende dal parametro isLight.
-    cctx.strokeStyle = '#000000';
+    cctx.strokeStyle = isLight ? '#000000' : '#ffffff';
 
     let drawing = false;
     const pos = e => {
@@ -1027,7 +1032,7 @@ currentEditingElement = el;
       img.src = el.dataURL;
     }
   }
-  
+
   overlay.appendChild(node);
 }
 
