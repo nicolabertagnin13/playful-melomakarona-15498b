@@ -54,6 +54,11 @@
     --glow: none;                    
   }
 
+    /* Ripristina il foglio bianco del PDF quando si usa il tema chiaro */
+  body.light-theme #pdfContainer.dark-pdf #pdfCanvas {
+    filter: none !important;
+  }
+
   /* Adattamenti specifici per il tema chiaro */
   body.light-theme header {
     background: #991b1b;             /* Header rosso */
@@ -762,11 +767,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================================================
-   AVVIO: decodifica Base64 e carica PDF
-   ========================================================= */
-async function avvia() {
-
-/* =========================================================
    RILEVAMENTO ORIENTAMENTO
    ========================================================= */
 let orientamentoCorrente = null;
@@ -795,6 +795,11 @@ function rilevaOrientamento() {
       }
     }
 
+    /* =========================================================
+   AVVIO: decodifica Base64 e carica PDF
+   ========================================================= */
+async function avvia() {
+  
     // Ricalcola il PDF per adattarlo alla nuova larghezza
     if (pdfDoc) {
       // Piccolo ritardo per aspettare che il browser aggiorni le dimensioni
