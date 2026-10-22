@@ -361,9 +361,13 @@
   .sigBox canvas {
   display: block; width: 100%; height: 100%;
   touch-action: none; cursor: crosshair;
-  /* Solo a schermo la firma appare bianca sul tema scuro */
+  /* Firma nera di default */
+}
+
+body:not(.light-theme) .sigBox canvas {
   filter: invert(1);
 }
+
   .sigLabel {
     position: absolute;
     top: 0;                          /* Allineata in alto */
