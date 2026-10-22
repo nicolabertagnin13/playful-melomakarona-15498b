@@ -861,13 +861,14 @@ async function renderPage() {
   await page.render({ canvasContext: ctx, viewport: vp }).promise;
 
   overlay.innerHTML = '';
-  elements.forEach(el => drawElement(el));
+  const isLight = document.body.classList.contains('light-theme');
+  elements.forEach(el => drawElement(el, isLight));
 }
 
 /* =========================================================
    DISEGNO ELEMENTI
    ========================================================= */
-function drawElement(el) {
+function drawElement(el, isLight) {
   const px = el.x * canvas.width;
   const py = el.y * canvas.height;
   const pw = el.w * canvas.width;
@@ -931,113 +932,100 @@ currentEditingElement = el;
 });
 
 }
-  else if (el.type === 'signature') {
-  node = document.createElement('div');
-  node.className = 'sigBox';
-  node.style.left = px + 'px';
-  node.style.top = py + 'px';
-  node.style.width = pw + 'px';
-  node.style.height = ph + 'px';
+    else if (el.type === 'signature') {
+    node = document.createElement('div');
+    node.className = 'sigBox';
+    node.style.left = px + 'px';
+    node.style.top = py + 'px';
+    node.style.width = pw + 'px';
+    node.style.height = ph + 'px';
 
-  const lab = document.createElement('div');
-  lab.className = 'sigLabel';
-  lab.textContent = '✍️ Firma qui';
-  node.appendChild(lab);
+    const lab = document.createElement('div');
+    lab.className = 'sigLabel';
+    lab.textContent = '✍️ Firma qui';
+    node.appendChild(lab);
 
-  const c = document.createElement('canvas');
-  const dpr = 2;
-  c.width = pw * dpr;
-  c.height = ph * dpr;
-  node.appendChild(c);
+    const c = document.createElement('canvas');
+    const dpr = 2;
+    c.width = pw * dpr;
+    c.height = ph * dpr;
+    node.appendChild(c);
 
-  const cctx = c.getContext('2d');
-  cctx.scale(dpr, dpr);
-  cctx.lineWidth = 2.5;
-  cctx.lineCap = 'round';
-  cctx.lineJoin = 'round';
+    const cctx = c.getContext('2d');
+    cctx.scale(dpr, dpr);
+    cctx.lineWidth = 2.5;
+    cctx.lineCap = 'round';
+    cctx.lineJoin = 'round';
 
-  // Il tratto è SEMPRE nero nel canvas. L'aspetto bianco nel tema scuro
-  // viene ottenuto invertendo i pixel al momento del render (vedi sotto).
-  cctx.strokeStyle = '#000000';
+    // ✅ Il tratto è SEMPRE nero nel canvas. L'aspetto bianco nel tema scuro
+    //    si ottiene invertendo i pixel solo al momento del render.
+    //    Il colore non dipende più dal DOM: dipende dal parametro isLight.
+    cctx.strokeStyle = '#000000';
 
-  // Funzione di supporto: inverte i pixel RGB di un canvas (alpha invariato).
-  // Serve per convertire tratto nero ↔ tratto bianco.
-  function invertiCanvas(destCtx, srcCanvas) {
-    const tmp = document.createElement('canvas');
-    tmp.width = srcCanvas.width;
-    tmp.height = srcCanvas.height;
-    const tctx = tmp.getContext('2d');
-    tctx.drawImage(srcCanvas, 0, 0);
-    const id = tctx.getImageData(0, 0, tmp.width, tmp.height);
-    const d = id.data;
-    for (let i = 0; i < d.length; i += 4) {
-      d[i]     = 255 - d[i];
-      d[i + 1] = 255 - d[i + 1];
-      d[i + 2] = 255 - d[i + 2];
-    }
-    tctx.putImageData(id, 0, 0);
-    destCtx.drawImage(tmp, 0, 0, srcCanvas.width / dpr, srcCanvas.height / dpr);
-  }
-
-  let drawing = false;
-  const pos = e => {
-    const r = c.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
-    return { x: t.clientX - r.left, y: t.clientY - r.top };
-  };
-  const start = e => { e.preventDefault(); e.stopPropagation(); drawing = true; const p = pos(e); cctx.beginPath(); cctx.moveTo(p.x, p.y); };
-  const move  = e => { if (!drawing) return; e.preventDefault(); e.stopPropagation(); const p = pos(e); cctx.lineTo(p.x, p.y); cctx.stroke(); };
-
-  const end = () => {
-    if (!drawing) return;
-    drawing = false;
-
-    // ✅ Salva il dataURL SEMPRE con tratto NERO (compatibile col PDF esportato).
-    // Se il tema è scuro, il canvas visibile ha il tratto nero ma è su sfondo
-    // trasparente; per il salvataggio va bene così com'è (già nero).
-    el.dataURL = c.toDataURL('image/png');
-    salvaDati();
-  };
-
-  c.addEventListener('mousedown', start);
-  c.addEventListener('mousemove', move);
-  c.addEventListener('mouseup', end);
-  c.addEventListener('mouseleave', end);
-  c.addEventListener('touchstart', start, { passive: false });
-  c.addEventListener('touchmove', move, { passive: false });
-  c.addEventListener('touchend', end);
-
-  // ✅ Quando ricarichiamo la firma dal dataURL:
-  //    - tema chiaro: disegna così com'è (tratto nero).
-  //    - tema scuro: inverti i pixel per far apparire il tratto bianco.
-  if (el.dataURL) {
-    const img = new Image();
-    img.onload = () => {
-      cctx.clearRect(0, 0, pw, ph);
-      const isLight = document.body.classList.contains('light-theme');
-      if (isLight) {
-        cctx.drawImage(img, 0, 0, pw, ph);
-      } else {
-        // Disegna l'immagine su un canvas offscreen, inverti i pixel, poi
-        // copia sul canvas visibile.
-        const off = document.createElement('canvas');
-        off.width = c.width;
-        off.height = c.height;
-        const octx = off.getContext('2d');
-        octx.drawImage(img, 0, 0, off.width, off.height);
-        const id = octx.getImageData(0, 0, off.width, off.height);
-        const d = id.data;
-        for (let i = 0; i < d.length; i += 4) {
-          d[i]     = 255 - d[i];
-          d[i + 1] = 255 - d[i + 1];
-          d[i + 2] = 255 - d[i + 2];
-        }
-        octx.putImageData(id, 0, 0);
-        cctx.drawImage(off, 0, 0, pw, ph);
-      }
+    let drawing = false;
+    const pos = e => {
+      const r = c.getBoundingClientRect();
+      const t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX - r.left, y: t.clientY - r.top };
     };
-    img.src = el.dataURL;
-  }
+    const start = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      drawing = true;
+      const p = pos(e);
+      cctx.beginPath();
+      cctx.moveTo(p.x, p.y);
+    };
+    const move = e => {
+      if (!drawing) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const p = pos(e);
+      cctx.lineTo(p.x, p.y);
+      cctx.stroke();
+    };
+    const end = () => {
+      if (!drawing) return;
+      drawing = false;
+      el.dataURL = c.toDataURL('image/png');
+      salvaDati();
+    };
+
+    c.addEventListener('mousedown', start);
+    c.addEventListener('mousemove', move);
+    c.addEventListener('mouseup', end);
+    c.addEventListener('mouseleave', end);
+    c.addEventListener('touchstart', start, { passive: false });
+    c.addEventListener('touchmove', move, { passive: false });
+    c.addEventListener('touchend', end);
+
+    if (el.dataURL) {
+      const img = new Image();
+      img.onload = () => {
+        cctx.clearRect(0, 0, pw, ph);
+        if (isLight) {
+          // Tema chiaro: disegna così com'è (tratto nero su sfondo chiaro)
+          cctx.drawImage(img, 0, 0, pw, ph);
+        } else {
+          // Tema scuro: inverti i pixel → tratto bianco su sfondo scuro
+          const off = document.createElement('canvas');
+          off.width = c.width;
+          off.height = c.height;
+          const octx = off.getContext('2d');
+          octx.drawImage(img, 0, 0, off.width, off.height);
+          const id = octx.getImageData(0, 0, off.width, off.height);
+          const d = id.data;
+          for (let i = 0; i < d.length; i += 4) {
+            d[i]     = 255 - d[i];
+            d[i + 1] = 255 - d[i + 1];
+            d[i + 2] = 255 - d[i + 2];
+          }
+          octx.putImageData(id, 0, 0);
+          cctx.drawImage(off, 0, 0, pw, ph);
+        }
+      };
+      img.src = el.dataURL;
+    }
   }
   
   overlay.appendChild(node);
