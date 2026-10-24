@@ -92,7 +92,7 @@
   }
   body.light-theme header button.danger {
     color: #ffffff;
-    border-color: #ffffff;
+    border-color: #fca5a5;
   }
   body.light-theme header button.danger:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -609,55 +609,6 @@ body:not(.light-theme) .sigBox canvas {
   filter: invert(1);
 }
 
-/* Pulsante "×" per cancellare la firma */
-.sigBox {
-  position: absolute; /* già presente, ma lo ripeto per sicurezza */
-}
-
-.sigClearBtn {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  font-size: 16px;
-  font-weight: bold;
-  line-height: 1;
-  cursor: pointer;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: all 0.2s;
-  touch-action: manipulation;
-}
-
-.sigClearBtn:hover {
-  background: #ef4444;
-  color: #ffffff;
-  transform: scale(1.1);
-}
-
-.sigClearBtn:active {
-  transform: scale(0.9);
-}
-
-/* Stile nel tema chiaro */
-body.light-theme .sigClearBtn {
-  background: rgba(153, 27, 27, 0.1);
-  color: #991b1b;
-}
-
-body.light-theme .sigClearBtn:hover {
-  background: #991b1b;
-  color: #ffffff;
-}
-
 </style>
 </head>
 <body>
@@ -812,9 +763,6 @@ function applicaTema(tema) {
     if (pdfContainer) pdfContainer.classList.add('dark-pdf');
   }
 }
-
-// Applica il tema salvato appena la pagina è caricata
-applicaTema(localStorage.getItem(THEME_KEY) || 'dark');
 
 function toggleTema() {
   const isLight = document.body.classList.contains('light-theme');
@@ -1008,14 +956,6 @@ currentEditingElement = el;
     lab.textContent = '✍️ Firma qui';
     node.appendChild(lab);
 
-        // ✅ Pulsante "×" per cancellare la firma
-    const clearBtn = document.createElement('button');
-    clearBtn.className = 'sigClearBtn';
-    clearBtn.type = 'button';
-    clearBtn.textContent = '×';
-    clearBtn.title = 'Cancella firma';
-    node.appendChild(clearBtn);
-
     const c = document.createElement('canvas');
     const dpr = 2;
     c.width = pw * dpr;
@@ -1069,22 +1009,6 @@ currentEditingElement = el;
     c.addEventListener('touchstart', start, { passive: false });
     c.addEventListener('touchmove', move, { passive: false });
     c.addEventListener('touchend', end);
-
-        // ✅ Listener per cancellare la firma
-    clearBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const conferma = confirm('⚠️ Vuoi davvero cancellare la firma?\n\nDovrai firmare di nuovo.');
-      if (!conferma) return;
-      
-      // Pulisci il canvas visibile
-      cctx.clearRect(0, 0, pw, ph);
-      
-      // Rimuovi la firma dai dati
-      el.dataURL = null;
-      salvaDati();
-    });
 
     if (el.dataURL) {
       const img = new Image();
@@ -1203,7 +1127,20 @@ async function exportPdf(printMode) {
       out.autoPrint();
       window.open(out.output('bloburl'), '_blank');
     } else {
-      out.save('modulo_compilato.pdf');
+      // Genera il nome del file: CED_[Azienda]_[Data].pdf
+     const campoAzienda = elements.find(e => e.id === 'azienda');
+     const nomeAzienda = (campoAzienda && campoAzienda.text ? campoAzienda.text.trim() : 'SenzaAzienda')
+       .replace(/[^a-zA-Z0-9]/g, '_'); // Sostituisce caratteri strani con _ (evita problemi nel nome file)
+
+      // Data di oggi in formato YYYY-MM-DD
+    const oggi = new Date();
+    const dataString = oggi.getFullYear() + '-' + 
+                       String(oggi.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(oggi.getDate()).padStart(2, '0');
+
+    const nomeFile = 'CED_' + nomeAzienda + '_' + dataString + '.pdf';
+
+    out.save(nomeFile);
     }
   } catch (err) {
     alert('Errore: ' + err.message);
