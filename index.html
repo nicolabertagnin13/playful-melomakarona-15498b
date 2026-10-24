@@ -832,6 +832,9 @@ setTimeout(rilevaOrientamento, 500);
    ========================================================= */
 async function avvia() {
   try {
+    // ✅ Applica il tema salvato PRIMA di tutto il resto
+    applicaTema(localStorage.getItem(THEME_KEY) || 'dark');
+
     const bin = atob(PDF_BASE64);
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
