@@ -603,6 +603,11 @@
   }
 }
 
+/* Inverte la firma solo visivamente quando il tema è scuro */
+body:not(.light-theme) .sigBox canvas {
+  filter: invert(1);
+}
+
 </style>
 </head>
 <body>
@@ -1004,30 +1009,11 @@ currentEditingElement = el;
     c.addEventListener('touchmove', move, { passive: false });
     c.addEventListener('touchend', end);
 
-        if (el.dataURL) {
+    if (el.dataURL) {
       const img = new Image();
       img.onload = () => {
         cctx.clearRect(0, 0, pw, ph);
-        if (isLight) {
-          // Tema chiaro: disegna nero (com'è)
-          cctx.drawImage(img, 0, 0, pw, ph);
-        } else {
-          // Tema scuro: inverti i pixel per farla vedere bianca
-          const off = document.createElement('canvas');
-          off.width = c.width;
-          off.height = c.height;
-          const octx = off.getContext('2d');
-          octx.drawImage(img, 0, 0, off.width, off.height);
-          const id = octx.getImageData(0, 0, off.width, off.height);
-          const d = id.data;
-          for (let i = 0; i < d.length; i += 4) {
-            d[i]     = 255 - d[i];
-            d[i + 1] = 255 - d[i + 1];
-            d[i + 2] = 255 - d[i + 2];
-          }
-          octx.putImageData(id, 0, 0);
-          cctx.drawImage(off, 0, 0, pw, ph);
-        }
+        cctx.drawImage(img, 0, 0, pw, ph);
       };
       img.src = el.dataURL;
     }
