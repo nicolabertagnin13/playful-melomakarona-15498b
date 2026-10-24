@@ -758,24 +758,24 @@ function applicaTema(tema) {
   }
 }
 
-function toggleTema() {
+funfunction toggleTema() {
   const isLight = document.body.classList.contains('light-theme');
   const nuovoTema = isLight ? 'dark' : 'light';
+  
+  // 1. Applichiamo il tema (aggiunge/toglie la classe)
   applicaTema(nuovoTema);
   localStorage.setItem(THEME_KEY, nuovoTema);
-    if (typeof salvaDati === 'function') salvaDati();
-    if (pdfDoc) renderPage();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const temaSalvato = localStorage.getItem(THEME_KEY) || 'dark';
-  applicaTema(temaSalvato);
-
-  const logo = document.getElementById('themeToggle');
-  if (logo) {
-    logo.addEventListener('click', toggleTema);
+  
+  if (typeof salvaDati === 'function') salvaDati();
+  
+  if (pdfDoc) {
+    // ✅ ASPETTIAMO 150ms. Questo dà al browser il tempo di applicare 
+    // il colore del tema prima di ridisegnare la firma.
+    setTimeout(() => {
+      renderPage();
+    }, 150);
   }
-});
+}
 
 /* =========================================================
    RILEVAMENTO ORIENTAMENTO
