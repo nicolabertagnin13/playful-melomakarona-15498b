@@ -92,7 +92,7 @@
   }
   body.light-theme header button.danger {
     color: #ffffff;
-    border-color: #fca5a5;
+    border-color: #ffffff;
   }
   body.light-theme header button.danger:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -610,6 +610,10 @@ body:not(.light-theme) .sigBox canvas {
 }
 
 /* Pulsante "×" per cancellare la firma */
+.sigBox {
+  position: absolute; /* già presente, ma lo ripeto per sicurezza */
+}
+
 .sigClearBtn {
   position: absolute;
   top: 2px;
@@ -643,6 +647,7 @@ body:not(.light-theme) .sigBox canvas {
   transform: scale(0.9);
 }
 
+/* Stile nel tema chiaro */
 body.light-theme .sigClearBtn {
   background: rgba(153, 27, 27, 0.1);
   color: #991b1b;
@@ -808,6 +813,9 @@ function applicaTema(tema) {
   }
 }
 
+// Applica il tema salvato appena la pagina è caricata
+applicaTema(localStorage.getItem(THEME_KEY) || 'dark');
+
 function toggleTema() {
   const isLight = document.body.classList.contains('light-theme');
   const nuovoTema = isLight ? 'dark' : 'light';
@@ -876,9 +884,6 @@ setTimeout(rilevaOrientamento, 500);
    ========================================================= */
 async function avvia() {
   try {
-    // ✅ Applica il tema salvato PRIMA di tutto il resto
-    applicaTema(localStorage.getItem(THEME_KEY) || 'dark');
-
     const bin = atob(PDF_BASE64);
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -904,7 +909,7 @@ async function avvia() {
 /* =========================================================
    RENDER
    ========================================================= */
-sync function renderPage() {
+async function renderPage() {
   const page = await pdfDoc.getPage(1);
   const vp1 = page.getViewport({ scale: 1 });
   const maxWidth = Math.min(window.innerWidth - 40, 900);
@@ -1065,17 +1070,21 @@ currentEditingElement = el;
     c.addEventListener('touchmove', move, { passive: false });
     c.addEventListener('touchend', end);
 
-        // ✅ Listener per cancellare la firma con conferma
+        // ✅ Listener per cancellare la firma
     clearBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      
       const conferma = confirm('⚠️ Vuoi davvero cancellare la firma?\n\nDovrai firmare di nuovo.');
       if (!conferma) return;
+      
+      // Pulisci il canvas visibile
       cctx.clearRect(0, 0, pw, ph);
+      
+      // Rimuovi la firma dai dati
       el.dataURL = null;
       salvaDati();
     });
-
 
     if (el.dataURL) {
       const img = new Image();
@@ -1194,20 +1203,7 @@ async function exportPdf(printMode) {
       out.autoPrint();
       window.open(out.output('bloburl'), '_blank');
     } else {
-      // Genera il nome del file: CED_[Azienda]_[Data].pdf
-     const campoAzienda = elements.find(e => e.id === 'azienda');
-     const nomeAzienda = (campoAzienda && campoAzienda.text ? campoAzienda.text.trim() : 'SenzaAzienda')
-       .replace(/[^a-zA-Z0-9]/g, '_'); // Sostituisce caratteri strani con _ (evita problemi nel nome file)
-
-      // Data di oggi in formato YYYY-MM-DD
-    const oggi = new Date();
-    const dataString = oggi.getFullYear() + '-' + 
-                       String(oggi.getMonth() + 1).padStart(2, '0') + '-' + 
-                       String(oggi.getDate()).padStart(2, '0');
-
-    const nomeFile = 'CED_' + nomeAzienda + '_' + dataString + '.pdf';
-
-    out.save(nomeFile);
+      out.save('modulo_compilato.pdf');
     }
   } catch (err) {
     alert('Errore: ' + err.message);
