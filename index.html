@@ -609,6 +609,50 @@ body:not(.light-theme) .sigBox canvas {
   filter: invert(1);
 }
 
+/* Pulsante "×" per cancellare la firma */
+.sigClearBtn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+  touch-action: manipulation;
+}
+
+.sigClearBtn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.sigClearBtn:active {
+  transform: scale(0.9);
+}
+
+body.light-theme .sigClearBtn {
+  background: rgba(153, 27, 27, 0.1);
+  color: #991b1b;
+}
+
+body.light-theme .sigClearBtn:hover {
+  background: #991b1b;
+  color: #ffffff;
+}
+
 </style>
 </head>
 <body>
@@ -860,7 +904,7 @@ async function avvia() {
 /* =========================================================
    RENDER
    ========================================================= */
-async function renderPage() {
+sync function renderPage() {
   const page = await pdfDoc.getPage(1);
   const vp1 = page.getViewport({ scale: 1 });
   const maxWidth = Math.min(window.innerWidth - 40, 900);
@@ -959,6 +1003,14 @@ currentEditingElement = el;
     lab.textContent = '✍️ Firma qui';
     node.appendChild(lab);
 
+        // ✅ Pulsante "×" per cancellare la firma
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'sigClearBtn';
+    clearBtn.type = 'button';
+    clearBtn.textContent = '×';
+    clearBtn.title = 'Cancella firma';
+    node.appendChild(clearBtn);
+
     const c = document.createElement('canvas');
     const dpr = 2;
     c.width = pw * dpr;
@@ -1012,6 +1064,18 @@ currentEditingElement = el;
     c.addEventListener('touchstart', start, { passive: false });
     c.addEventListener('touchmove', move, { passive: false });
     c.addEventListener('touchend', end);
+
+        // ✅ Listener per cancellare la firma con conferma
+    clearBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const conferma = confirm('⚠️ Vuoi davvero cancellare la firma?\n\nDovrai firmare di nuovo.');
+      if (!conferma) return;
+      cctx.clearRect(0, 0, pw, ph);
+      el.dataURL = null;
+      salvaDati();
+    });
+
 
     if (el.dataURL) {
       const img = new Image();
