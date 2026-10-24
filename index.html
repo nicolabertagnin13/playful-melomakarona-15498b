@@ -350,12 +350,6 @@
   z-index: 50;
 }
 
-/* Invertiamo il colore della firma SOLO visivamente quando siamo nel tema scuro */
-body:not(.light-theme) .sigBox canvas {
-  filter: invert(1);
-}
-
-
   /* ===== AREA FIRMA ===== */
   .sigBox {
     position: absolute;
@@ -769,16 +763,19 @@ function toggleTema() {
   const nuovoTema = isLight ? 'dark' : 'light';
   applicaTema(nuovoTema);
   localStorage.setItem(THEME_KEY, nuovoTema);
-  
-  if (typeof salvaDati === 'function') salvaDati();
-  
-  if (pdfDoc) {
-    // ✅ Ritardiamo il ridisegno di 50ms per far "digerire" il cambio tema al browser
-    setTimeout(() => {
-      renderPage();
-    }, 50);
-  }
+    if (typeof salvaDati === 'function') salvaDati();
+    if (pdfDoc) renderPage();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const temaSalvato = localStorage.getItem(THEME_KEY) || 'dark';
+  applicaTema(temaSalvato);
+
+  const logo = document.getElementById('themeToggle');
+  if (logo) {
+    logo.addEventListener('click', toggleTema);
+  }
+});
 
 /* =========================================================
    RILEVAMENTO ORIENTAMENTO
@@ -968,7 +965,7 @@ currentEditingElement = el;
     // ✅ Il tratto è SEMPRE nero nel canvas. L'aspetto bianco nel tema scuro
     //    si ottiene invertendo i pixel solo al momento del render.
     //    Il colore non dipende più dal DOM: dipende dal parametro isLight.
-    cctx.strokeStyle = '#000000';
+    cctx.strokeStyle = isLight ? '#000000' : '#ffffff';
 
     let drawing = false;
     const pos = e => {
@@ -992,10 +989,9 @@ currentEditingElement = el;
       cctx.lineTo(p.x, p.y);
       cctx.stroke();
     };
-        const end = () => {
+    const end = () => {
       if (!drawing) return;
       drawing = false;
-      // ✅ Salviamo SEMPRE il tratto nero, indipendentemente dal tema
       el.dataURL = c.toDataURL('image/png');
       salvaDati();
     };
@@ -1012,8 +1008,26 @@ currentEditingElement = el;
       const img = new Image();
       img.onload = () => {
         cctx.clearRect(0, 0, pw, ph);
-        // ✅ Disegniamo sempre il tratto nero. Il CSS lo invertirà se serve.
-        cctx.drawImage(img, 0, 0, pw, ph);
+        if (isLight) {
+          // Tema chiaro: disegna così com'è (tratto nero su sfondo chiaro)
+          cctx.drawImage(img, 0, 0, pw, ph);
+        } else {
+          // Tema scuro: inverti i pixel → tratto bianco su sfondo scuro
+          const off = document.createElement('canvas');
+          off.width = c.width;
+          off.height = c.height;
+          const octx = off.getContext('2d');
+          octx.drawImage(img, 0, 0, off.width, off.height);
+          const id = octx.getImageData(0, 0, off.width, off.height);
+          const d = id.data;
+          for (let i = 0; i < d.length; i += 4) {
+            d[i]     = 255 - d[i];
+            d[i + 1] = 255 - d[i + 1];
+            d[i + 2] = 255 - d[i + 2];
+          }
+          octx.putImageData(id, 0, 0);
+          cctx.drawImage(off, 0, 0, pw, ph);
+        }
       };
       img.src = el.dataURL;
     }
