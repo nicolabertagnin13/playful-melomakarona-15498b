@@ -1203,7 +1203,22 @@ async function exportPdf(printMode) {
       out.autoPrint();
       window.open(out.output('bloburl'), '_blank');
     } else {
-      out.save('modulo_compilato.pdf');
+      // ✅ Genera il nome del file: CED_[Azienda]_[Data].pdf
+      const campoAzienda = elements.find(e => e.id === 'azienda');
+      const nomeAzienda = (campoAzienda && campoAzienda.text ? campoAzienda.text.trim() : 'SenzaAzienda')
+        .replace(/[\\/:*?"<>|]/g, '_'); // Sostituisce solo i caratteri non validi per i file
+
+      // Data di oggi in formato GG-MM-AAAA
+      const oggi = new Date();
+      const giorno = String(oggi.getDate()).padStart(2, '0');
+      const mese = String(oggi.getMonth() + 1).padStart(2, '0');
+      const anno = oggi.getFullYear();
+      
+      const dataString = giorno + '-' + mese + '-' + anno;
+
+      const nomeFile = 'CED_' + nomeAzienda + '_' + dataString + '.pdf';
+
+      out.save(nomeFile);
     }
   } catch (err) {
     alert('Errore: ' + err.message);
