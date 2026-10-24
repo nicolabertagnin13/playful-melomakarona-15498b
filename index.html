@@ -962,10 +962,9 @@ currentEditingElement = el;
     cctx.lineCap = 'round';
     cctx.lineJoin = 'round';
 
-    // ✅ Il tratto è SEMPRE nero nel canvas. L'aspetto bianco nel tema scuro
-    //    si ottiene invertendo i pixel solo al momento del render.
-    //    Il colore non dipende più dal DOM: dipende dal parametro isLight.
-    cctx.strokeStyle = isLight ? '#000000' : '#ffffff';
+     // Disegniamo SEMPRE in nero sul canvas. L'aspetto bianco nel tema scuro
+    // si ottiene solo visivamente al momento del render.
+    cctx.strokeStyle = '#000000';
 
     let drawing = false;
     const pos = e => {
@@ -992,6 +991,7 @@ currentEditingElement = el;
     const end = () => {
       if (!drawing) return;
       drawing = false;
+      // ✅ Salviamo il tratto nero puro
       el.dataURL = c.toDataURL('image/png');
       salvaDati();
     };
@@ -1004,15 +1004,15 @@ currentEditingElement = el;
     c.addEventListener('touchmove', move, { passive: false });
     c.addEventListener('touchend', end);
 
-    if (el.dataURL) {
+        if (el.dataURL) {
       const img = new Image();
       img.onload = () => {
         cctx.clearRect(0, 0, pw, ph);
         if (isLight) {
-          // Tema chiaro: disegna così com'è (tratto nero su sfondo chiaro)
+          // Tema chiaro: disegna nero (com'è)
           cctx.drawImage(img, 0, 0, pw, ph);
         } else {
-          // Tema scuro: inverti i pixel → tratto bianco su sfondo scuro
+          // Tema scuro: inverti i pixel per farla vedere bianca
           const off = document.createElement('canvas');
           off.width = c.width;
           off.height = c.height;
