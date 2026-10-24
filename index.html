@@ -764,6 +764,9 @@ function applicaTema(tema) {
   }
 }
 
+// Applica il tema salvato appena la pagina è caricata
+applicaTema(localStorage.getItem(THEME_KEY) || 'dark');
+
 function toggleTema() {
   const isLight = document.body.classList.contains('light-theme');
   const nuovoTema = isLight ? 'dark' : 'light';
