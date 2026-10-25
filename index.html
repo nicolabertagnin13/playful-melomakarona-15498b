@@ -1218,7 +1218,8 @@ async function exportPdf(printMode) {
 
       const nomeFile = 'CED_' + nomeAzienda + '_' + dataString + '.pdf';
 
-      out.save(nomeFile);
+      out.save(nomeFile)
+      ;
     }
   } catch (err) {
     alert('Errore: ' + err.message);
@@ -1407,14 +1408,16 @@ setTimeout(function() {
       e.preventDefault();
 
       const destinatario = 'nbertagnin@fulgard.com';
-      const oggetto = 'Richiesta modifiche file';
+      const oggetto = 'Richiesta assistenza modulo CED';
       const corpo =
         'Buongiorno,\n\n' +
-        'vorrei richiedere una modifica al file/modulo.\n\n' +
+        'Con la presente sono a richiedere assistenza per l'app "modulo CED".\n\n' +
         'Descrizione della richiesta:\n' +
-        '(scrivere qui la richiesta)\n\n' +
-        '---\n' +
-        'Inviato dal modulo CED\n';
+        '- [scrivere qui la richiesta]\n\n' +
+        '\n' +
+        '\n' +
+        'Grazie.\n' +
+        '---------Inviato dal modulo CED---------\n';
 
       const url = 'mailto:' + destinatario +
                   '?subject=' + encodeURIComponent(oggetto) +
