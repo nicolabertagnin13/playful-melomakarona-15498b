@@ -935,17 +935,18 @@ function applicaTema(tema) {
   const body = document.body;
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   const pdfContainer = document.getElementById('pdfContainer');
+  const logo = document.getElementById('themeToggle'); // ✅ Prende il logo
   
   if (tema === 'light') {
     body.classList.add('light-theme');
     if(metaTheme) metaTheme.setAttribute('content', '#991b1b');
-    // ✅ Togliamo la classe dark-pdf nel tema chiaro!
     if (pdfContainer) pdfContainer.classList.remove('dark-pdf');
+    if (logo) logo.src = 'logo-w.png'; // ✅ Logo bianco nel tema chiaro
   } else {
     body.classList.remove('light-theme');
     if(metaTheme) metaTheme.setAttribute('content', '#1e293b');
-    // ✅ Aggiungiamo la classe dark-pdf nel tema scuro
     if (pdfContainer) pdfContainer.classList.add('dark-pdf');
+    if (logo) logo.src = 'logo-s.png'; // ✅ Logo verde nel tema scuro
   }
 }
 
