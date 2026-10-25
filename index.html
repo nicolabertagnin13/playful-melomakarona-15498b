@@ -691,6 +691,96 @@ body.light-theme #themeHint {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* ===== MODALE DI CONFERMA ===== */
+#confirmModal {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+#confirmModal .modal-content {
+  background: var(--card-bg);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  width: 100%; max-width: 420px;
+  padding: 30px 24px 24px 24px;
+  display: flex; flex-direction: column;
+  gap: 16px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px var(--accent-soft);
+  animation: slideUp 0.25s ease-out;
+}
+
+.confirm-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.4));
+}
+
+#confirmTitle {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-dark);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+#confirmMessage {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-light);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+#confirmModal .modal-buttons {
+  display: flex; gap: 10px; justify-content: center;
+  margin-top: 8px;
+}
+
+#confirmModal button {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+/* Pulsante Annulla (grigio neutro) */
+#confirmModal button.secondary {
+  background: transparent;
+  color: var(--text-light);
+  border: 1.5px solid rgba(148, 163, 184, 0.4);
+}
+#confirmModal button.secondary:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-dark);
+  border-color: rgba(148, 163, 184, 0.8);
+}
+
+/* Pulsante Conferma (rosso) */
+#confirmModal button.danger {
+  background: var(--danger);
+  color: #ffffff;
+  border: 1.5px solid var(--danger);
+}
+#confirmModal button.danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+/* Tema chiaro: bordo e ombra più delicati */
+body.light-theme #confirmModal .modal-content {
+  border-color: var(--accent);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
 </style>
 </head>
 <body>
@@ -729,6 +819,19 @@ body.light-theme #themeHint {
         <div class="modal-buttons">
             <button class="secondary" id="modalCancel">Annulla</button>
             <button id="modalConfirm">Conferma</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale di conferma personalizzata -->
+<div id="confirmModal" class="hidden">
+    <div class="modal-content confirm-content">
+        <div class="confirm-icon">⚠️</div>
+        <h3 id="confirmTitle">Attenzione</h3>
+        <p id="confirmMessage">Sei sicuro di voler procedere?</p>
+        <div class="modal-buttons">
+            <button class="secondary" id="confirmCancel">Annulla</button>
+            <button class="danger" id="confirmOk">Conferma</button>
         </div>
     </div>
 </div>
@@ -1107,16 +1210,16 @@ currentEditingElement = el;
     clearBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
-      const conferma = confirm('⚠️ Vuoi davvero cancellare la firma?\n\nDovrai firmare di nuovo.');
-      if (!conferma) return;
-      
-      // Pulisci il canvas visibile
-      cctx.clearRect(0, 0, pw, ph);
-      
-      // Rimuovi la firma dai dati
-      el.dataURL = null;
-      salvaDati();
+      mostraConferma(
+        'La firma corrente verrà cancellata.\nDovrai firmare di nuovo.',
+        'Cancella firma?',
+        (ok) => {
+          if (!ok) return;
+          cctx.clearRect(0, 0, pw, ph);
+          el.dataURL = null;
+          salvaDati();
+        }
+      );
     });
 
     if (el.dataURL) {
@@ -1179,16 +1282,16 @@ function savePositions() {
    RESET / ESPORTAZIONE
    ========================================================= */
 document.getElementById('clearBtn').onclick = () => {
-  if (!confirm('⚠️ Vuoi davvero svuotare tutti i campi?\n\nQuesta azione non può essere annullata.')) return;
-
-  // 1. Cancella i dati salvati in localStorage
-  cancellaDatiSalvati();
-
-  // 2. Resetta i campi in memoria
-  elements = CAMPI_INIZIALI.map(c => ({ ...c }));
-
-  // 3. Ridisegna la pagina
-  renderPage();
+  mostraConferma(
+    'Verranno cancellati tutti i dati inseriti (testi e firma).\nQuesta azione non può essere annullata.',
+    'Svuotare tutti i campi?',
+    (ok) => {
+      if (!ok) return;
+      cancellaDatiSalvati();
+      elements = CAMPI_INIZIALI.map(c => ({ ...c }));
+      renderPage();
+    }
+  );
 };
 
 document.getElementById('downloadBtn').onclick = () => exportPdf(false);
@@ -1485,6 +1588,38 @@ setTimeout(function() {
     }, 5000); // 5 secondi
   }
 }, 500); // Aspetta mezzo secondo per non accavallarsi con l'animazione di caricamento
+
+/* =========================================================
+   MODALE DI CONFERMA PERSONALIZZATA
+   ========================================================= */
+function mostraConferma(messaggio, titolo, callback) {
+  const modal = document.getElementById('confirmModal');
+  const titleEl = document.getElementById('confirmTitle');
+  const messageEl = document.getElementById('confirmMessage');
+  const btnCancel = document.getElementById('confirmCancel');
+  const btnOk = document.getElementById('confirmOk');
+
+  titleEl.textContent = titolo || 'Attenzione';
+  messageEl.textContent = messaggio;
+
+  // Rimuove eventuali listener precedenti clonando i pulsanti
+  const newCancel = btnCancel.cloneNode(true);
+  const newOk = btnOk.cloneNode(true);
+  btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+  btnOk.parentNode.replaceChild(newOk, btnOk);
+
+  newCancel.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    callback(false);
+  });
+
+  newOk.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    callback(true);
+  });
+
+  modal.classList.remove('hidden');
+}
 
 </script>
 
