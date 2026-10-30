@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Modulo Integrità Locale</title>
 
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#1e293b">
 
 <!-- Per iPad / iPhone (Safari) -->
@@ -1642,5 +1642,21 @@ function mostraConferma(messaggio, titolo, callback) {
 
 <!-- Test di VS Code Git: funziona! -->
  
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+            console.log('✅ Service Worker registrato con successo! Scope:', reg.scope);
+        })
+        .catch(err => {
+            console.log('❌ Errore registrazione Service Worker:', err);
+        });
+    });
+  }
+</script>
+</body>
+</html>
+
 </body>
 </html>
