@@ -51,9 +51,6 @@ self.addEventListener('activate', (event) => {
 
 // 3. FETCH: Intercetta le richieste
 self.addEventListener('fetch', (event) => {
-  // A. GESTIONE AVVIO APP E REFRESH (Risoluzione problema tablet Android e Cloudflare)
-  // Se l'utente naviga o fa un refresh, cerca SEMPRE index.html nella cache.
-  // Questo bypassa gli errori di routing di Cloudflare.
   if (event.request.mode === 'navigate') {
     event.respondWith(
       caches.match('./index.html').then((cachedResponse) => {
