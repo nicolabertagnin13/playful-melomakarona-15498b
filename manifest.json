@@ -2,7 +2,7 @@
   "name": "Modulo Integrità Locale",
   "short_name": "Modulo CED",
   "description": "Modulo per la dichiarazione di integrità del locale",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f0f2f5",
