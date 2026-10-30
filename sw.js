@@ -1,4 +1,4 @@
-const CACHE_NAME = 'modulo-ced-v1';
+const CACHE_NAME = 'modulo-ced-v2'; // Ho cambiato la versione per forzare l'aggiornamento
 
 // Elenco di tutti i file necessari per il funzionamento offline
 const ASSETS_TO_CACHE = [
@@ -19,6 +19,8 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Apertura cache e salvataggio file...');
+        // addAll fallisce se anche solo un file non viene trovato.
+        // Se hai problemi, assicurati che TUTTI i file elencati sopra esistano.
         return cache.addAll(ASSETS_TO_CACHE);
       })
       .then(() => {
@@ -28,7 +30,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. ATTIVAZIONE: Elimina le vecchie cache se il nome cambia
+// 2. ATTIVAZIONE: Elimina le vecchie cache
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -47,25 +49,31 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. FETCH: Intercetta le richieste e serve i file dalla cache
+// 3. FETCH: Intercetta le richieste
 self.addEventListener('fetch', (event) => {
-  // A. GESTIONE AVVIO APP (Risoluzione problema tablet Android)
-  // Se l'app viene aperta (navigazione), cerca 'index.html' nella cache.
-  // Questo risolve l'errore "file spostato o non più esistente".
+  // A. GESTIONE AVVIO APP E REFRESH (Risoluzione problema tablet Android e Cloudflare)
+  // Se l'utente naviga o fa un refresh, cerca SEMPRE index.html nella cache.
+  // Questo bypassa gli errori di routing di Cloudflare.
   if (event.request.mode === 'navigate') {
     event.respondWith(
       caches.match('./index.html').then((cachedResponse) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        // Se non è in cache (es. prima installazione), scarica dalla rete
-        return fetch(event.request);
+        // Se non è in cache (es. prima installazione online), scarica dalla rete
+        return fetch(event.request).catch(() => {
+          // Se anche la rete fallisce, mostriamo un messaggio di errore offline
+          return new Response(
+            '<h1>Sei offline</h1><p>Impossibile caricare l\'applicazione. Riprova quando sei connesso.</p>', 
+            { headers: { 'Content-Type': 'text/html' } }
+          );
+        });
       })
     );
     return;
   }
 
-  // B. GESTIONE ALTRE RISORSE (Immagini, JS, CSS)
+  // B. GESTIONE ALTRE RISORSE (Immagini, JS, CSS, PDF)
   // Usa la strategia "Cache First" (prima la cache, poi la rete)
   event.respondWith(
     caches.match(event.request).then((response) => {
@@ -76,10 +84,9 @@ self.addEventListener('fetch', (event) => {
       
       // Se non è in cache, scaricalo dalla rete
       return fetch(event.request).then((networkResponse) => {
-        // (Opzionale) Potresti salvare qui le nuove richieste in cache
         return networkResponse;
       }).catch(() => {
-        // Se la rete fallisce e non c'è in cache (es. per le immagini), fallisce silenziosamente
+        // Se la rete fallisce e non c'è in cache, fallisce silenziosamente
         console.log('Risorsa non trovata offline:', event.request.url);
       });
     })
