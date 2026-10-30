@@ -1,20 +1,14 @@
-const CACHE_NAME = 'modulo-ced-v3';
+const CACHE_NAME = 'modulo-ced-test-minimo';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html',
-  './manifest.json',
-  './libs/pdf.min.js',
-  './libs/pdf.worker.min.js',
-  './libs/jspdf.umd.min.js',
-  './logo-s.png',
-  './logo-w.png',
-  './icon-512.png'
+  './index.html'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('Salvataggio in corso...');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
@@ -35,18 +29,22 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Se la richiesta è un caricamento di pagina (navigazione)
+  // Se l'app si avvia
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        // Se la rete fallisce (offline), usa index.html dalla cache
-        return caches.match('./index.html');
+      caches.match('./index.html').then((cachedResponse) => {
+        if (cachedResponse) {
+          console.log('Servito index.html dalla cache!');
+          return cachedResponse;
+        }
+        console.log('index.html NON in cache, provo la rete');
+        return fetch(event.request);
       })
     );
     return;
   }
 
-  // Per tutte le altre risorse: prima la cache, poi la rete
+  // Per tutte le altre cose (librerie, immagini)
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);
