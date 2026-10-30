@@ -1,18 +1,18 @@
 {
   "name": "Modulo Integrità Locale",
   "short_name": "Modulo CED",
-  "description": "Modulo per la dichiarazione di integrità del locale",
-  "start_url": "./index.html",
-  "scope": "./",
+  "description": "Applicazione per la compilazione del modulo di dichiarazione di integrità locale.",
+  "start_url": "/APP_Fulgard/Modulo%20CED/modulo-git/index.html",
+  "scope": "/APP_Fulgard/Modulo%20CED/modulo-git/",
   "display": "standalone",
-  "background_color": "#f0f2f5",
+  "background_color": "#0a0d14",
   "theme_color": "#1e293b",
-  "lang": "it",
+  "orientation": "any",
   "icons": [
     {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
+      "src": "/APP_Fulgard/Modulo%20CED/modulo-git/icon-512.png",
       "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any maskable"
     }
   ]
